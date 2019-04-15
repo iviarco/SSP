@@ -51,8 +51,13 @@ class SSP
 		}
 	}
 
-
+	protected function query($query)
+	{
+		return $this->connection->query($query);
+	}	
 }
+
+
 
 
 
