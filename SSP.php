@@ -71,7 +71,7 @@ class SSP
 	function __construct($hostname, $username="", $password="", $database="")
 	{
 		// check for $_REQUEST
-		if(empty($_REQUEST)) die('requires $_POST.');
+		// if(empty($_REQUEST)) die('requires $_POST.');
 
 		$this->request = $_POST;
 
