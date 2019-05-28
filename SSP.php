@@ -474,7 +474,7 @@ class SSP
 		return $this;
 	}
 
-	public function join($join_table, $column_name, $table)
+	public function join($join_table, $column_name, $table="")
 	{
 		/**
 		* $column_name has 2 options as follows:
