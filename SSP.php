@@ -476,7 +476,18 @@ class SSP
 
 	public function join($join_table, $column_name, $table)
 	{
-		$this->__join[] = " LEFT JOIN `$join_table` ON `$join_table`.`$column_name` = `$table`.`$column_name` ";
+		/**
+		* $column_name has 2 options as follows:
+		* 1. 	'user_type_id'
+		* 2.	`user`.`user_type_id` = `user_type`.`user_type_id`
+		*/
+		$join = "`$join_table`.`$column_name` = `$table`.`$column_name`";
+
+		if(strpos($column_name, '=') !== false){
+			$join = $column_name;
+		}
+
+		$this->__join[] = " LEFT JOIN `$join_table` ON $join ";
 		return $this;
 	}
 
