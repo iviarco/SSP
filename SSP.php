@@ -510,25 +510,25 @@ class SSP
 		$this->filter();
 
 		// where and filter
+
 		if(!empty($this->__where) || !empty($this->__filter)){
-
-			$this->sql .= 'WHERE' . implode('AND', $this->__where);
-
-			// set total records fetched
-			$this->records_total($this->sql);
-
-			if(!empty($this->__filter)){
-				if(!empty($this->__where)){
-					$this->sql .= 'AND' . implode('OR', $this->__filter);
-				}
-				else{
-					$this->sql .= implode('OR', $this->__filter);
-				}
-			}
-			else{
-				$this->sql .= implode('OR', $this->__filter);
-			}
+			$this->sql .= 'WHERE';
 		}
+
+		if(!empty($this->__filter)){
+			$this->sql .= ' (' . implode('OR', $this->__filter) . ') ';
+		}
+
+		if(!empty($this->__where)){
+			if(!empty($this->__filter)){
+				$this->sql .= 'AND';
+			}
+			
+			$this->sql .= implode('AND', $this->__where);
+		}
+
+		// set total records fetched
+		$this->records_total($this->sql);
 
 		// set filtered records
 		$this->records_filtered($this->sql);
