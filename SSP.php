@@ -27,6 +27,7 @@ class SSP
 	private $join 		= "";
 	private $where 		= "";
 	private $filter 	= "";
+	private $order_by 	= "";
 	private $limit 		= "";
 	private $search 	= "";
 	private $record_total = 0;
@@ -463,7 +464,13 @@ class SSP
 	{
 		if(empty($alias)){
 			$this->__columns[] = $column_name;
-			$this->__column[] = " `" . str_replace('.', '`.`', $column_name) . "` ";
+
+			if(strpos($column_name, '*') !== false){
+				$this->__column[] = " `" . str_replace('.', '`.', $column_name);
+			}
+			else{
+				$this->__column[] = " `" . str_replace('.', '`.`', $column_name) . "` ";
+			}
 		}
 		else{
 			$this->__alias[] = $alias;
@@ -476,24 +483,64 @@ class SSP
 
 	public function join($join_table, $column_name, $table="")
 	{
+		// alias
+
+		if(strpos($join_table, ' as ') !== false){
+			$e = explode(' as ', $join_table);
+			$join_table = "`$e[0]` as $e[1]";
+		}
+		else{
+			$join_table = "`$join_table`";
+		}
+
 		/**
 		* $column_name has 2 options as follows:
 		* 1. 	'user_type_id'
 		* 2.	`user`.`user_type_id` = `user_type`.`user_type_id`
 		*/
-		$join = "`$join_table`.`$column_name` = `$table`.`$column_name`";
+
+
+		$join = "$join_table.`$column_name` = `$table`.`$column_name`";
 
 		if(strpos($column_name, '=') !== false){
 			$join = $column_name;
 		}
 
-		$this->__join[] = " LEFT JOIN `$join_table` ON $join ";
+		$this->__join[] = " LEFT JOIN $join_table ON $join ";
 		return $this;
 	}
 
 	public function where($column_name, $value)
 	{
 		$this->__where[] = " `" . str_replace('.', '`.`', $column_name) . "`  = '$value' ";
+		return $this;
+	}
+
+	public function where_not($column_name, $value)
+	{
+		$this->__where[] = " `" . str_replace('.', '`.`', $column_name) . "`  != '$value' ";
+		return $this;
+	}
+
+	public function where_not_in($column_name, $value)
+	{
+		// $value should be array
+		if(gettype($value) == 'array'){
+			$where_not_in = implode(',', $value);
+			$this->__where[] = " `" . str_replace('.', '`.`', $column_name) . "` NOT IN ('$where_not_in') ";
+		}
+
+		return $this;
+	}
+
+	public function where_in($column_name, $value)
+	{
+		// $value should be array
+		if(gettype($value) == 'array'){
+			$where_in = implode(',', $value);
+			$this->__where[] = " `" . str_replace('.', '`.`', $column_name) . "` IN ($where_in) ";
+		}
+
 		return $this;
 	}
 
@@ -511,6 +558,21 @@ class SSP
 				$this->__filter[] = " `" . str_replace('.', '`.`', $column_name) . "`  LIKE '%$search%' ";				
 			}
 		}
+	}
+
+	public function order_by( $column_name, $sort )
+	{
+		if( empty($this->order_by) ){
+			$this->order_by .= ' ORDER BY ';
+			$this->order_by .= " `" . str_replace('.', '`.`', $column_name) . "` " . $sort . "";
+		}
+		else{
+			$this->order_by .= ", `" . str_replace('.', '`.`', $column_name) . "` " . $sort . "";
+		}
+
+		$this->sql .= $this->order_by;
+
+		return $this;
 	}
 
 	public function output($display=false)
@@ -544,12 +606,14 @@ class SSP
 		// set filtered records
 		$this->records_filtered($this->sql);
 
+		// set order by
+		$this->sql .= $this->order_by;
+
 		// get limit
 		$this->_limit();
 
 		// set limit
 		$this->sql .= $this->limit;
-
 
 		if($display){
 			return $this->sql;
